@@ -1,0 +1,1383 @@
+# Prompt: Build a Production-Ready Realistic Web Piano App
+
+## Short Summary
+
+Build a beautiful, realistic, easy-to-use web piano app using **Next.js, React, TypeScript, and Web Audio API**.
+
+The app should let users play piano with:
+
+- Computer keyboard
+- Mouse
+- Touch screen
+- Multi-touch chords
+
+It should also include:
+
+- Realistic piano sound
+- Sustain pedal
+- Recording and playback
+- Metronome
+- Lessons/practice mode
+- Local user profiles
+- Import/export profile data
+- Themes
+- Responsive mobile-friendly design
+
+The final result should be polished enough to deploy as a real standalone piano learning and playing website.
+
+---
+
+# 1. Role
+
+You are an expert frontend engineer, audio engineer, React/Next.js developer, and UI/UX designer.
+
+Create a complete production-grade piano application with clean code, strong architecture, realistic sound, and a simple user experience.
+
+Focus on making the app:
+
+- Easy to use
+- Beautiful
+- Fast
+- Realistic
+- Beginner-friendly
+- Mobile-friendly
+- Production-ready
+
+---
+
+# 2. Recommended Tech Stack
+
+Use:
+
+- Next.js latest stable version
+- React
+- TypeScript
+- Web Audio API
+- Modern CSS, CSS Modules, or Tailwind CSS
+- LocalStorage or IndexedDB for local profile data
+
+Optional:
+
+- Tone.js only if it helps improve sound or timing
+- Zustand only if simple global state is needed
+
+Avoid:
+
+- Heavy unnecessary frameworks
+- Required external CDN files
+- Server-side audio code
+- Browser API usage during SSR
+
+Important:
+
+- The app must work immediately after install.
+- Real piano samples should be supported, but the app must still work without them using a high-quality synth fallback.
+
+---
+
+# 3. Main Goal
+
+Create a realistic web piano simulator and learning app that can be used by beginners and casual players.
+
+The app should allow users to:
+
+- Play piano freely
+- Learn basic notes and songs
+- Practice with guided lessons
+- Record their performance
+- Save settings and progress locally
+- Export/import their profile when changing browser or device
+
+---
+
+# 4. Main Features
+
+The app must include:
+
+1. Realistic piano keyboard
+2. Computer keyboard controls
+3. Mouse and touch controls
+4. Realistic piano sound
+5. Sustain pedal
+6. Volume control
+7. Octave shift
+8. Metronome
+9. Recording and playback
+10. Lessons/practice section
+11. Local profile/account system
+12. Import/export profile data
+13. Themes
+14. Fullscreen performance mode
+15. Responsive design
+16. Accessibility support
+
+---
+
+# 5. Piano Layout
+
+Create a realistic piano keyboard with:
+
+- White keys
+- Black keys
+- Correct piano arrangement
+- At least 3 octaves
+- Preferably from `C3` to `C7`
+
+Notes must include:
+
+```txt
+C, C#, D, D#, E, F, F#, G, G#, A, A#, B
+```
+
+Correct black key placement:
+
+```txt
+C# between C and D
+D# between D and E
+F# between F and G
+G# between G and A
+A# between A and B
+```
+
+There should be no black keys between:
+
+```txt
+E and F
+B and C
+```
+
+Use generated note data instead of hardcoding every key manually.
+
+Example note object:
+
+```ts
+type PianoNote = {
+  note: string;
+  octave: number;
+  fullNote: string;
+  frequency: number;
+  type: 'white' | 'black';
+  keyboardLabel?: string;
+  keyboardCode?: string;
+  shiftKeyboardLabel?: string;
+};
+```
+
+---
+
+# 6. Computer Keyboard Mapping
+
+Use `event.code` for reliable keyboard mapping.
+
+Do not rely only on `event.key`, because symbols can change depending on keyboard layout.
+
+## White Key Mapping
+
+### Number Row
+
+| Keyboard | Code | Piano Note |
+|---|---|---|
+| 1 | Digit1 | C3 |
+| 2 | Digit2 | D3 |
+| 3 | Digit3 | E3 |
+| 4 | Digit4 | F3 |
+| 5 | Digit5 | G3 |
+| 6 | Digit6 | A3 |
+| 7 | Digit7 | B3 |
+| 8 | Digit8 | C4 |
+| 9 | Digit9 | D4 |
+| 0 | Digit0 | E4 |
+
+### Q to P Row
+
+| Keyboard | Code | Piano Note |
+|---|---|---|
+| Q | KeyQ | F4 |
+| W | KeyW | G4 |
+| E | KeyE | A4 |
+| R | KeyR | B4 |
+| T | KeyT | C5 |
+| Y | KeyY | D5 |
+| U | KeyU | E5 |
+| I | KeyI | F5 |
+| O | KeyO | G5 |
+| P | KeyP | A5 |
+
+### A to L Row
+
+| Keyboard | Code | Piano Note |
+|---|---|---|
+| A | KeyA | B5 |
+| S | KeyS | C6 |
+| D | KeyD | D6 |
+| F | KeyF | E6 |
+| G | KeyG | F6 |
+| H | KeyH | G6 |
+| J | KeyJ | A6 |
+| K | KeyK | B6 |
+| L | KeyL | C7 |
+
+---
+
+# 7. Black Key Mapping
+
+Use `Shift + key` for sharp notes.
+
+Examples:
+
+| Shortcut | Piano Note |
+|---|---|
+| Shift + 1 | C#3 |
+| Shift + 2 | D#3 |
+| Shift + 4 | F#3 |
+| Shift + 5 | G#3 |
+| Shift + 6 | A#3 |
+| Shift + 8 | C#4 |
+| Shift + 9 | D#4 |
+| Shift + Q | F#4 |
+| Shift + W | G#4 |
+| Shift + E | A#4 |
+| Shift + T | C#5 |
+| Shift + Y | D#5 |
+| Shift + I | F#5 |
+| Shift + O | G#5 |
+| Shift + P | A#5 |
+| Shift + S | C#6 |
+| Shift + D | D#6 |
+| Shift + G | F#6 |
+| Shift + H | G#6 |
+| Shift + J | A#6 |
+
+Important:
+
+- Use `event.shiftKey` with `event.code`.
+- Prevent duplicate keydown repeats.
+- Support chords and fast repeated notes.
+
+---
+
+# 8. Realistic Piano Sound
+
+Make the sound as close as possible to a real acoustic piano.
+
+## Sound Requirements
+
+The piano sound should include:
+
+- Natural attack
+- Warm body tone
+- Realistic decay
+- Long natural release
+- Velocity response
+- Sustain resonance
+- Soft stereo width
+- Slight hammer character
+- Natural damping when notes are released
+- Polyphonic playback
+- Smooth repeated notes without harsh cutting
+
+## Preferred Audio Approach
+
+Use real piano samples if available.
+
+Sample folder:
+
+```txt
+/public/samples/piano/
+```
+
+Sample naming format:
+
+```txt
+C3.mp3
+Cs3.mp3
+D3.mp3
+Ds3.mp3
+E3.mp3
+F3.mp3
+Fs3.mp3
+G3.mp3
+Gs3.mp3
+A3.mp3
+As3.mp3
+B3.mp3
+...
+C7.mp3
+```
+
+If real samples are missing, use a high-quality synthesized fallback.
+
+The fallback should use:
+
+- Multiple oscillators
+- Slight detuning
+- Harmonic layering
+- ADSR envelope
+- Exponential decay
+- Low-pass filter
+- Gentle high-frequency roll-off
+- Subtle reverb
+- Optional impulse-like hammer click
+- Optional stereo panning
+
+The fallback should sound piano-like, not like a basic beep.
+
+## Audio Engine API
+
+Create a browser-only audio engine separate from React.
+
+Example:
+
+```ts
+class AudioEngine {
+  init(): Promise<void>;
+  resume(): Promise<void>;
+  preloadSamples(notes: string[]): Promise<void>;
+  noteOn(note: string, velocity?: number): string;
+  noteOff(voiceIdOrNote: string): void;
+  setSustain(enabled: boolean): void;
+  setVolume(value: number): void;
+  setReverb(amount: number): void;
+  setToneBrightness(value: number): void;
+  stopAll(): void;
+}
+```
+
+Important:
+
+- `noteOn` should return a unique voice ID.
+- The same note should be playable repeatedly without killing the previous voice instantly.
+- Audio state should be managed outside React rendering.
+- Resume AudioContext after first user interaction.
+- Clean up old voices automatically.
+
+---
+
+# 9. Sound Control Options
+
+Add a sound settings panel with:
+
+- Master volume
+- Reverb amount
+- Brightness/tone control
+- Sustain amount
+- Release length
+- Sample mode/fallback mode indicator
+- Panic button to stop all notes
+
+Optional advanced options:
+
+- Soft piano mode
+- Bright piano mode
+- Concert hall reverb
+- Studio dry mode
+
+Save these settings to the local profile.
+
+---
+
+# 10. Sustain Pedal
+
+Add realistic sustain pedal behavior.
+
+Controls:
+
+| Control | Action |
+|---|---|
+| Hold Spacebar | Sustain pedal down |
+| Release Spacebar | Sustain pedal up |
+| Sustain button | Toggle sustain mode |
+
+Behavior:
+
+- Notes keep ringing while sustain is active.
+- When sustain is released, sustained notes decay naturally.
+- Held keys should continue playing even if sustain is released.
+- Show a clear sustain indicator.
+- Record sustain events during recording.
+
+---
+
+# 11. Controls Panel
+
+Add an easy-to-understand control panel.
+
+Required controls:
+
+- Volume slider
+- Octave down button
+- Octave up button
+- Sustain toggle
+- Metronome toggle
+- BPM control
+- Start/stop recording
+- Play recording
+- Clear recording
+- Export recording JSON
+- Import recording JSON
+- Theme selector
+- Note labels toggle
+- Keyboard labels toggle
+- Fullscreen button
+- Stop all notes button
+
+Keyboard shortcuts:
+
+| Key | Action |
+|---|---|
+| Spacebar | Sustain while held |
+| Z | Octave down |
+| X | Octave up |
+| M | Toggle metronome |
+| Escape | Exit fullscreen/performance mode |
+
+Avoid shortcut conflicts with piano keys.
+
+---
+
+# 12. Mouse, Keyboard, and Touch Interaction
+
+## Keyboard
+
+When user presses a mapped key:
+
+- Play note instantly
+- Show key pressed visually
+- Add note to active notes
+- Support chords
+- Ignore repeated keydown events while held
+
+When key is released:
+
+- Release visual state
+- Release audio unless sustain is active
+
+Also handle:
+
+- Window blur
+- Lost focus
+- Stuck keys
+- Octave shift while notes are held
+
+## Mouse
+
+Support:
+
+- Click to play
+- Hold to sustain note
+- Release to stop note
+- Drag across keys for glissando
+
+## Touch
+
+Support:
+
+- Tap to play
+- Hold notes
+- Multi-touch chords
+- Slide fingers across keys
+
+Use Pointer Events when possible.
+
+---
+
+# 13. Recording and Playback
+
+Add a simple but powerful recording system.
+
+Controls:
+
+- Start recording
+- Stop recording
+- Play recording
+- Pause playback
+- Clear recording
+- Export recording as JSON
+- Import recording from JSON
+
+Record:
+
+- Note on
+- Note off
+- Time
+- Velocity
+- Sustain on/off
+- Octave shift events if used
+
+Example:
+
+```ts
+type RecordingEvent =
+  | { type: 'noteOn'; note: string; time: number; velocity: number }
+  | { type: 'noteOff'; note: string; time: number }
+  | { type: 'sustain'; enabled: boolean; time: number };
+```
+
+Export format:
+
+```json
+{
+  "version": 1,
+  "name": "My Recording",
+  "createdAt": "ISO_DATE_STRING",
+  "duration": 12000,
+  "events": []
+}
+```
+
+Playback should:
+
+- Preserve timing
+- Play chords correctly
+- Reproduce sustain events
+- Stop safely
+- Not freeze the UI
+
+---
+
+# 14. Lessons and Practice Section
+
+Add a beginner-friendly lessons section where users can learn and practice piano.
+
+Create a dedicated area called:
+
+```txt
+Learn / Practice
+```
+
+## Lesson Features
+
+Include beginner lessons such as:
+
+1. Introduction to the piano keyboard
+2. Learning note names: C, D, E, F, G, A, B
+3. Finding middle C
+4. Playing simple melodies
+5. Understanding black keys and sharps
+6. Basic rhythm with metronome
+7. Simple chords: C major, F major, G major
+8. Practice song: Twinkle Twinkle Little Star
+9. Practice song: Mary Had a Little Lamb
+10. Practice song: Happy Birthday simplified version, if suitable
+
+## Lesson UI
+
+Each lesson should include:
+
+- Lesson title
+- Short explanation
+- Notes to play
+- Start lesson button
+- Next/previous step buttons
+- Highlight the next key to press
+- Show progress percentage
+- Show mistakes
+- Show completion status
+
+## Guided Practice Mode
+
+When practice mode starts:
+
+- Highlight the next note on the piano
+- Wait for the user to press the correct note
+- Give visual feedback for correct/wrong notes
+- Play optional guide sound
+- Move to the next note after correct input
+- Show progress
+- Save completed lessons to user profile
+
+## Practice Stats
+
+Track:
+
+- Lessons completed
+- Accuracy
+- Best score
+- Practice time
+- Last practiced date
+- Favorite songs
+
+Save all practice progress locally.
+
+---
+
+# 15. Local Account / Profile System
+
+Add a local profile system using browser storage.
+
+This is not a server account. It should work fully offline in the browser.
+
+Use LocalStorage or IndexedDB.
+
+## Profile Features
+
+Allow users to:
+
+- Create a local profile
+- Choose a display name
+- Choose an avatar color or simple icon
+- Switch between local profiles
+- Rename profile
+- Delete profile
+- Reset profile progress
+
+## Store Per Profile
+
+Save these data items:
+
+- Display name
+- Created date
+- Last opened date
+- App settings
+- Theme
+- Volume
+- Sound settings
+- Label preferences
+- Octave shift
+- Completed lessons
+- Practice scores
+- Practice time
+- Recordings list
+- Favorite recordings
+- Imported recordings
+- Metronome BPM
+
+Example profile type:
+
+```ts
+type UserProfile = {
+  id: string;
+  name: string;
+  avatarColor: string;
+  createdAt: string;
+  updatedAt: string;
+  settings: {
+    theme: 'classic' | 'darkStudio' | 'warmWood';
+    volume: number;
+    reverb: number;
+    brightness: number;
+    sustainAmount: number;
+    showNoteLabels: boolean;
+    showKeyboardLabels: boolean;
+    metronomeBpm: number;
+  };
+  progress: {
+    completedLessons: string[];
+    lessonScores: Record<string, number>;
+    totalPracticeTime: number;
+    lastPracticedAt?: string;
+  };
+  recordings: SavedRecording[];
+};
+```
+
+## Profile UX
+
+Add a simple profile screen or modal with:
+
+- Current profile name
+- Create new profile
+- Switch profile
+- Rename profile
+- Delete profile
+- Export profile
+- Import profile
+- Export all profiles
+- Import all profiles
+
+Important:
+
+- Ask for confirmation before deleting profile data.
+- Validate imported JSON.
+- Show helpful error messages for invalid imports.
+- Do not lose existing profile data accidentally.
+
+---
+
+# 16. Import and Export Options
+
+Add import/export so users can move data to another browser or device.
+
+## Export Options
+
+Allow exporting:
+
+1. Current profile as JSON
+2. All profiles as JSON
+3. Individual recording as JSON
+4. All recordings from current profile as JSON
+5. App settings as JSON
+
+## Import Options
+
+Allow importing:
+
+1. Profile JSON
+2. All profiles JSON
+3. Recording JSON
+4. Settings JSON
+
+## Import Behavior
+
+When importing:
+
+- Validate file format
+- Check version number
+- Prevent duplicate profile ID conflicts
+- Ask whether to merge or create a new profile if needed
+- Show success or error message
+
+Example export file:
+
+```json
+{
+  "app": "Realistic Web Piano Simulator",
+  "type": "profile-export",
+  "version": 1,
+  "exportedAt": "ISO_DATE_STRING",
+  "profile": {}
+}
+```
+
+Add a small note in the UI:
+
+```txt
+Your profiles are saved only in this browser. Export your profile if you want to move it to another browser or device.
+```
+
+---
+
+# 17. User Session / Onboarding Flow
+
+Add a simple session flow when the user opens the app.
+
+## First Visit
+
+If no profile exists:
+
+1. Show welcome screen
+2. Explain the app in simple words
+3. Ask user to create a local profile
+4. Let user choose name and avatar color
+5. Offer quick choices:
+   - Start Playing
+   - Start Beginner Lesson
+   - Import Existing Profile
+
+## Returning User
+
+If profile exists:
+
+1. Load last used profile automatically
+2. Show quick welcome message
+3. Continue where user left off
+4. Show buttons:
+   - Continue Lesson
+   - Free Play
+   - Recordings
+   - Profile Settings
+
+## Session Tracking
+
+Track:
+
+- Session start time
+- Practice duration
+- Last opened date
+- Last active lesson
+- Last selected mode
+
+Save this information locally.
+
+---
+
+# 18. App Modes
+
+Make the app easy to navigate by using simple modes or tabs.
+
+Suggested navigation:
+
+1. Free Play
+2. Learn / Practice
+3. Recordings
+4. Profile
+5. Settings
+
+## Free Play
+
+Main piano mode for playing freely.
+
+## Learn / Practice
+
+Guided lessons and practice songs.
+
+## Recordings
+
+View, play, rename, delete, export, and import recordings.
+
+## Profile
+
+Manage local profiles and import/export data.
+
+## Settings
+
+Sound, theme, labels, accessibility, and app preferences.
+
+---
+
+# 19. Visual Design
+
+Create a premium piano appearance.
+
+The design should feel like:
+
+- A professional digital piano
+- A modern music learning app
+- A polished studio instrument
+
+## Piano Body
+
+Use:
+
+- Glossy black or wood-style body
+- Soft shadows
+- Ambient lighting
+- Rounded corners
+- Premium controls
+
+## White Keys
+
+White keys should have:
+
+- Ivory color
+- Subtle gradient
+- Rounded bottom corners
+- Thin border
+- Realistic shadow
+- Smooth pressed animation
+
+Pressed state:
+
+- Move slightly down
+- Become slightly warmer/brighter
+- Shadow compresses
+
+## Black Keys
+
+Black keys should have:
+
+- Glossy black finish
+- Reflections
+- Strong shadow
+- Raised look
+- Correct z-index
+
+Pressed state:
+
+- Move slightly down
+- Add edge highlight
+- Reduce shadow
+
+Animation duration:
+
+```txt
+50ms to 100ms
+```
+
+Use CSS transforms for smooth 60 FPS animation.
+
+---
+
+# 20. Themes
+
+Add at least 3 themes:
+
+## Classic Piano
+
+- Glossy black body
+- Ivory keys
+- Traditional piano look
+
+## Dark Studio
+
+- Dark modern interface
+- Blue/purple accent lights
+- Studio feel
+
+## Warm Wood
+
+- Wood-inspired body
+- Warm colors
+- Vintage feel
+
+Use CSS variables so themes are easy to maintain.
+
+Save selected theme to the current profile.
+
+---
+
+# 21. Active Notes Display
+
+Show active notes clearly.
+
+Example:
+
+```txt
+Active Notes: C4, E4, G4
+```
+
+Also show:
+
+- Held notes
+- Sustained notes
+- Current octave shift
+- Sustain status
+- Recording status
+- Current lesson note, if in lesson mode
+
+---
+
+# 22. Key Labels
+
+Each key should optionally show:
+
+- Note name
+- Keyboard shortcut
+
+White key example:
+
+```txt
+C4
+1
+```
+
+Black key example:
+
+```txt
+C#4
+Shift + 1
+```
+
+Add toggles for:
+
+- Show note labels
+- Show keyboard labels
+
+Save preferences to the user profile.
+
+---
+
+# 23. Metronome
+
+Add a metronome with:
+
+- On/off
+- BPM range from `40` to `240`
+- Visual beat indicator
+- Optional click sound
+- Keyboard shortcut `M`
+
+Save BPM and metronome preference to the current profile.
+
+Use stable timing so the metronome does not drift badly.
+
+---
+
+# 24. Fullscreen Performance Mode
+
+Add fullscreen mode.
+
+In fullscreen mode:
+
+- Piano is the main focus
+- Controls are minimized or collapsible
+- Active notes stay visible
+- Escape exits fullscreen
+- Handle browsers without fullscreen support gracefully
+
+---
+
+# 25. Responsive Design
+
+The app must work on:
+
+- Desktop
+- Laptop
+- Tablet
+- Mobile
+
+Desktop:
+
+- Show full piano if possible
+- Controls visible
+
+Tablet:
+
+- Touch-friendly controls
+- Scaled piano
+
+Mobile:
+
+- Horizontal scrolling keyboard
+- Larger touch targets
+- Collapsible panels
+- Multi-touch support
+- Clean simple navigation
+
+---
+
+# 26. Accessibility
+
+Include:
+
+- ARIA labels for piano keys
+- Accessible controls
+- Visible focus indicators
+- Keyboard-accessible buttons and sliders
+- Reduced motion support
+- High contrast support
+- Do not rely only on color for feedback
+
+Example labels:
+
+```txt
+Play C4
+Play C sharp 4
+```
+
+---
+
+# 27. Performance Requirements
+
+Target:
+
+- 60 FPS animations
+- Low-latency audio
+- Smooth chords
+- Smooth touch input
+- Fast startup
+- No audio glitches
+- No unnecessary React re-renders
+
+Optimize by:
+
+- Keeping the audio engine separate from React
+- Using refs for live input state
+- Memoizing piano keys
+- Preloading samples if available
+- Cleaning old audio voices
+- Avoiding layout-heavy animations
+- Avoiding browser API usage during SSR
+
+---
+
+# 28. Project Structure
+
+Use this or a similarly clean structure:
+
+```txt
+piano-app/
+  public/
+    samples/
+      piano/
+        README.md
+  src/
+    app/
+      layout.tsx
+      page.tsx
+      globals.css
+    components/
+      Piano/
+        Piano.tsx
+        PianoKey.tsx
+        PianoControls.tsx
+        ActiveNotesDisplay.tsx
+      Lessons/
+        LessonsHome.tsx
+        LessonPlayer.tsx
+        LessonCard.tsx
+        PracticeStats.tsx
+      Profile/
+        ProfileModal.tsx
+        ProfileSwitcher.tsx
+        ImportExportPanel.tsx
+      Recordings/
+        RecordingControls.tsx
+        RecordingsList.tsx
+      Metronome/
+        Metronome.tsx
+      UI/
+        Button.tsx
+        Slider.tsx
+        Toggle.tsx
+        Select.tsx
+        Modal.tsx
+        Tabs.tsx
+    hooks/
+      useAudioEngine.ts
+      useKeyboardInput.ts
+      usePointerInput.ts
+      usePiano.ts
+      useRecorder.ts
+      useMetronome.ts
+      useLessons.ts
+      useProfiles.ts
+      useFullscreen.ts
+      useLocalStorage.ts
+    lib/
+      audio/
+        AudioEngine.ts
+        SampleManager.ts
+        SynthFallback.ts
+        voiceManager.ts
+        envelope.ts
+      piano/
+        notes.ts
+        frequencies.ts
+        keyboardMap.ts
+        generateKeyboard.ts
+        noteUtils.ts
+      lessons/
+        lessonData.ts
+        lessonTypes.ts
+        lessonScoring.ts
+      profiles/
+        profileTypes.ts
+        profileStorage.ts
+        profileImportExport.ts
+        defaultProfile.ts
+      recording/
+        recordingTypes.ts
+        recordingSerializer.ts
+        recordingPlayer.ts
+      utils/
+        clamp.ts
+        time.ts
+        downloadJson.ts
+        validateJson.ts
+    styles/
+      themes.css
+  package.json
+  tsconfig.json
+  next.config.js
+  README.md
+```
+
+---
+
+# 29. Important Edge Cases
+
+Handle:
+
+- AudioContext blocked until first click/touch
+- Missing piano samples
+- Repeated keydown events
+- Stuck notes when window loses focus
+- User changes browser tab
+- User changes octave while notes are held
+- User releases sustain after many notes
+- Same note played repeatedly very fast
+- Large chords
+- Invalid imported profile JSON
+- Duplicate profile IDs during import
+- LocalStorage unavailable or full
+- Mobile multi-touch behavior
+- Fullscreen not supported
+- Reduced motion enabled
+- SSR hydration issues
+
+---
+
+# 30. Acceptance Criteria
+
+## Basic Playing
+
+- Pressing `1` plays `C3`
+- Pressing `Shift + 1` plays `C#3`
+- Pressing `Q` plays `F4`
+- Mouse click plays notes
+- Touch tap plays notes
+- Multi-touch chords work
+- Sustain works with Spacebar
+- Chords work correctly
+
+## Sound
+
+- Notes sound close to a real piano
+- Real samples are supported
+- Synth fallback works without samples
+- Notes decay naturally
+- Repeated notes do not cut off harshly
+- Volume, reverb, and brightness controls work
+
+## Lessons
+
+- Lessons page exists
+- User can start beginner lessons
+- Next note is highlighted
+- Correct and wrong notes are detected
+- Lesson progress is saved
+- Practice stats are shown
+
+## Profiles
+
+- User can create local profile
+- User can switch profiles
+- Settings are saved per profile
+- Lesson progress is saved per profile
+- Recordings are saved per profile
+- User can export/import profile JSON
+- User can export/import all profiles
+
+## Recording
+
+- User can record notes
+- User can play recording
+- Sustain is recorded
+- Recording can be exported/imported
+
+## UI
+
+- Piano looks realistic and premium
+- App is simple to understand
+- Tabs/modes are clear
+- Mobile layout works
+- Themes work
+- Labels can be toggled
+
+## Code
+
+- TypeScript compiles
+- `npm run dev` works
+- `npm run build` works
+- No console errors
+- No hydration errors
+- Clean modular structure
+- Audio engine is separate from UI
+
+---
+
+# 31. Final Deliverables
+
+Generate the complete project including:
+
+- Full Next.js source code
+- React TypeScript components
+- Web Audio API engine
+- Real sample loading support
+- High-quality synth fallback
+- Piano UI
+- Keyboard/mouse/touch input
+- Sustain pedal
+- Controls panel
+- Metronome
+- Recording system
+- Lessons/practice mode
+- Local profile system
+- Import/export system
+- Themes
+- Responsive styling
+- Accessibility support
+- README documentation
+- Sample folder README
+
+The project should run with:
+
+```bash
+npm install
+npm run dev
+```
+
+And build with:
+
+```bash
+npm run build
+```
+
+---
+
+# 32. README Requirements
+
+Create a clear `README.md` explaining:
+
+- What the app does
+- Features
+- How to install
+- How to run locally
+- How to build
+- How to deploy
+- Keyboard controls
+- How to add piano samples
+- How profiles work
+- How import/export works
+- Browser support notes
+
+Also create:
+
+```txt
+/public/samples/piano/README.md
+```
+
+Explain:
+
+- Where to place sample files
+- Naming format
+- Supported audio formats
+- That the app works without samples using synth fallback
+
+---
+
+# 33. Build Order
+
+Implement in this order:
+
+1. Create Next.js TypeScript app structure
+2. Add note/frequency utilities
+3. Add keyboard mapping
+4. Build audio engine with synth fallback
+5. Add sample loading support
+6. Build piano UI
+7. Add keyboard/mouse/touch input
+8. Add sustain behavior
+9. Add controls and settings
+10. Add recording/playback
+11. Add local profile system
+12. Add import/export
+13. Add lessons/practice mode
+14. Add metronome
+15. Add themes
+16. Add responsive styling
+17. Add accessibility refinements
+18. Add README files
+19. Run build and fix all errors
+
+---
+
+# 34. Non-Negotiable Requirements
+
+- Must use Next.js, React, and TypeScript
+- Must be production-ready
+- Must work without external samples
+- Must include realistic synth fallback
+- Must support real piano samples if added
+- Must support chords
+- Must support sustain pedal
+- Must support keyboard, mouse, and touch
+- Must include lessons/practice mode
+- Must include local profiles
+- Must include profile import/export
+- Must include recording/playback
+- Must include themes
+- Must be responsive
+- Must avoid SSR/browser API errors
+- Must include documentation
+
+---
+
+# Final Instruction
+
+Generate a complete, polished, production-ready **Next.js + React + TypeScript realistic web piano app**.
+
+The app should be simple for users, beautiful to look at, close to a real piano in sound and feel, useful for learning, and ready to deploy as a standalone website.
+
+Do not provide only pseudocode. Generate real working implementation files.
